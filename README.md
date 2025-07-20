@@ -1,4 +1,6 @@
-Fitness Tracker App
+NAME: GARV PUROHIT INTERNSHIP @ CODETECH IT SOLUTIONS DOMAIN: ANDROID DEVELOPMENT DURATION: 20th June 2025 to 20th July 2025 
+Overview of the Projects:
+#Fitness Tracker App
 Overview
 This project is a Fitness Tracker Android app built as part of the CODTECH Internship Task 4. The app tracks steps, distance, and calories burned using Android’s built-in sensors. It also includes real-time updates and data visualization of user activity using charts.
 
