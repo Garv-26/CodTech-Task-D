@@ -1,0 +1,152 @@
+1. Project Setup (build.gradle)
+gradle
+Copy
+Edit
+// app/build.gradle
+dependencies {
+    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+}
+
+2. AndroidManifest.xml
+xml
+Copy
+Edit
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.codtech.fitnessapp">
+
+    <application
+        android:allowBackup="true"
+        android:label="Fitness Tracker"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+
+3. activity_main.xml
+xml
+Copy
+Edit
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" 
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:padding="16dp">
+
+    <TextView android:id="@+id/tvSteps" android:text="Steps: 0"
+        android:textSize="20sp" android:layout_margin="10dp"/>
+    
+    <TextView android:id="@+id/tvDistance" android:text="Distance: 0 m"
+        android:textSize="20sp" android:layout_margin="10dp"/>
+    
+    <TextView android:id="@+id/tvCalories" android:text="Calories: 0 kcal"
+        android:textSize="20sp" android:layout_margin="10dp"/>
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/lineChart"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_marginTop="20dp"/>
+</LinearLayout>
+
+4. MainActivity.kt
+kotlin
+Copy
+Edit
+package com.codtech.fitnessapp
+
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.os.Bundle
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+
+class MainActivity : AppCompatActivity(), SensorEventListener {
+
+    private lateinit var sensorManager: SensorManager
+    private var stepSensor: Sensor? = null
+    private var totalSteps = 0f
+
+    private lateinit var tvSteps: TextView
+    private lateinit var tvDistance: TextView
+    private lateinit var tvCalories: TextView
+    private lateinit var lineChart: LineChart
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        tvSteps = findViewById(R.id.tvSteps)
+        tvDistance = findViewById(R.id.tvDistance)
+        tvCalories = findViewById(R.id.tvCalories)
+        lineChart = findViewById(R.id.lineChart)
+
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+
+        showChartData()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        stepSensor?.also {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        totalSteps = event.values[0]
+        updateUI(totalSteps.toInt())
+    }
+
+    private fun updateUI(steps: Int) {
+        tvSteps.text = "Steps: $steps"
+
+        val distance = steps * 0.78f // meters
+        tvDistance.text = "Distance: %.2f m".format(distance)
+
+        val calories = steps * 0.04f // rough estimate
+        tvCalories.text = "Calories: %.2f kcal".format(calories)
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+    private fun showChartData() {
+        val entries = arrayListOf(
+            Entry(1f, 1500f),
+            Entry(2f, 2200f),
+            Entry(3f, 1800f),
+            Entry(4f, 2600f),
+            Entry(5f, 3000f)
+        )
+        val dataSet = LineDataSet(entries, "Past 5 Days Steps")
+        dataSet.color = resources.getColor(android.R.color.holo_blue_dark)
+        dataSet.setCircleColor(resources.getColor(android.R.color.holo_blue_light))
+        dataSet.valueTextSize = 12f
+
+        val lineData = LineData(dataSet)
+        lineChart.data = lineData
+        lineChart.invalidate()
+    }
+}
